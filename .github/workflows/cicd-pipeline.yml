@@ -35,41 +35,42 @@ jobs:
       - name: Run tests
         run: npm test
 
-# The "build-and-push" job is for Continuous Delivery (CD)
-build-and-push:
-  # This job should only run if the 'build-and-test' job succeeds
-  needs: build-and-test
-  # This job should only run on a push to the main branch, not on pull requests
-  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  # The "build-and-push" job is for Continuous Delivery (CD)
+  build-and-push:
+    # This job should only run if the 'build-and-test' job succeeds
+    needs: build-and-test
+    # This job should only run on a push to the main branch, not on pull requests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-  runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-  steps:
-    # Step 1: Check out the repository code
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    # Step 2: Log in to Docker Hub
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    # Step 3: Build and push the Docker image
-    # The image is tagged with the unique SHA of the commit
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/simple-node-app:${{ github.sha }}
-# (Optional) The "deploy" job is for Continuous Deployment
-deploy:
-  # This job runs only after the image has been successfully pushed
-  needs: build-and-push
-  runs-on: ubuntu-latest
-  steps:
-    - name: Deploy to production
-      run: |
-        echo "This is where you would add your deployment script."
-        echo "For example, you could SSH into your server and run 'docker pull' and 'docker run'."
-        echo "Deploying image: ${{ secrets.DOCKERHUB_USERNAME }}/simple-node-app:${{ github.sha }}"
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      # Step 2: Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # Step 3: Build and push the Docker image
+      # The image is tagged with the unique SHA of the commit
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/simple-node-app:${{ github.sha }}
+
+  # (Optional) The "deploy" job is for Continuous Deployment
+  deploy:
+    # This job runs only after the image has been successfully pushed
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production
+        run: |
+          echo "This is where you would add your deployment script."
+          echo "For example, you could SSH into your server and run 'docker pull' and 'docker run'."
+          echo "Deploying image: ${{ secrets.DOCKERHUB_USERNAME }}/simple-node-app:${{ github.sha }}"
